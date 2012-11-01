@@ -1,40 +1,19 @@
-import pdb
-import inspect
-import collections
+name = ""
+tree = None
+wrapper = None
 
-import platform
-if 'win' in platform.platform().lower():
-	from msvcrt import kbhit as getc
-else:
-	# Some other method of nonblocking read...
+def classHook(cls):
+	import inspect
+	global name
+	name = cls.__name__
+	for item in inspect.getmembers(cls, inspect.ismethod):
+		setattr(cls, item[0], wrapper(item[1]))
 
-class Stream(object):
-
-	def __init__(self, fh):
-		self.fh = fh
-		self.out = collections.deque()
-		self.buffered = false
-	
-	def toggleBuffered(self):
-		self.buffered = not self.buffered
-
-	def write(self, 
-
-
-class BedBug(object):
-	
-	def __init__(self):
-		self.version = 1
-		self.versionString = "1.0 (Itchy)"
-		self.debug = False
-
-	def debug(self, shell=True, promt="\nThere ya go:"):
-		if not self.debug:
-			return
-		if prompt:
-			print prompt
-		if shell:
-			print ">>> BedBug - %s <<<" % self.versionString
-			print "<<< Type ''\h' for help :P"
-			while True:
-				cmd = raw_input(">>> ")
+def writeTree():
+	import os
+	import commonbug
+	fname = os.getcwd() + os.sep  + name
+	while os.path.exists(fname + ".dot"):
+		fname = commonbug.upLabel(fname)
+	fh = open(fname + ".dot", "w")
+	tree.toFile(fh)
