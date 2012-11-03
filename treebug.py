@@ -7,6 +7,7 @@ class TreeNode(object):
 		global _l
 		self.label = _l
 		_l = commonbug.upLabel(_l)
+		self.write = True
 		self.key = key
 		self.children = []
 	
@@ -27,30 +28,54 @@ class TreeNode(object):
 	def delNode(self, index):
 		self.children.pop(index)
 	
-	def toFile(self, fh=None, root=True):
-		if root:
-			# Create teh file then!
-			if not fh:
-				fname = os.getcwd() + os.sep + self.key + ".dot"
-				if not os.path.exists(fname):
-					fh = open(fname, "w")
-				else:
-					print "Awwww fuck theres another file there!"
-					return
-			if fh.tell() == 0:
-				fh.write("digraph %s {\n" % self.key)
+	# Needs Werk
+	#def getTime(self):
+	#	for child in children:
+	#
+	#def colorNodes(self, root=True):
 
+	def toFile(self, fh=None, root=True):
+		# If we arent set to write...
+		if not self.write:
+			return
+
+		# In the case the root node is writing...
+		if root:
+			# If fh is not a file
+			if not type(fh) is file:
+				# Check that there is a dotdot dir
+				path = os.getcwd() + os.sep + ".dot" + os.sep
+				if not os.path.exists(path):
+					os.mkdir(path)
+				# We were passed a filename
+				if type(fh) is str:
+					if not os.path.exists(fh):
+						fname = fh
+					else:
+						fh = None
+				# use a different name if occupied
+				if not fh:
+					fname = path + self.key
+				# Create teh file then!
+				fh = open(fname + ".dot", "w")
+			# Lastly write the context as root
+			fh.write("digraph %s {\n" % self.key)
+
+		# Write the current node and children in...
 		fh.write("\t%s [label=\"%s\"];\n" % (self, self.key))
 		[fh.write("\t\t%s -> %s;\n" % (self, child)) for child in self.children]
+
+		# Tell the children to write themselves...
 		for child in self.children:
 			child.toFile(fh, root=False)
 
+		# Finishing as root, clean up
 		if root:
 			fh.write("}")
 			fh.close()
 
 # Our root node
-_r = TreeNode("__main__")
+_r = None
 def treeit(func):
 	def wrapper(*args, **kwargs):
 		global _r
@@ -62,9 +87,11 @@ def treeit(func):
 			_r = TreeNode(func.__name__)
 			r.addNode(_r)
 		ret = func(*args, **kwargs)
-		# Restore the parent for siblings called
-		if r:
-			_r = r
+		# We are root, write out
+		if not r:
+			_r.toFile()
+		# Restore root
+		_r = r
 		return ret
 	return wrapper
 
