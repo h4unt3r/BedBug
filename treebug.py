@@ -1,4 +1,5 @@
 import os
+import time
 import commonbug
 
 _l = "aaaa"
@@ -10,6 +11,7 @@ class TreeNode(object):
 		self.write = True
 		self.key = key
 		self.children = []
+		self.time = 0.0
 	
 	def __repr__(self):
 		string = "'<TreeNode \"%s\":[" % self.key
@@ -29,9 +31,16 @@ class TreeNode(object):
 		self.children.pop(index)
 	
 	# Needs Werk
-	#def getTime(self):
-	#	for child in children:
-	#
+	def getTime(self):
+		if not self.children:
+			return self.time
+
+		# Else sum the times of the children
+		self.time = 0.0
+		for child in self.children:
+			self.time += child.getTime()
+		return self.time
+	
 	#def colorNodes(self, root=True):
 
 	def toFile(self, fh=None, root=True):
@@ -62,7 +71,7 @@ class TreeNode(object):
 			fh.write("digraph %s {\n" % self.key)
 
 		# Write the current node and children in...
-		fh.write("\t%s [label=\"%s\"];\n" % (self, self.key))
+		fh.write("\t%s [label=\"%s\"];\n" % (self, "%s\\n%d" % (self.key, self.getTime())))
 		[fh.write("\t\t%s -> %s;\n" % (self, child)) for child in self.children]
 
 		# Tell the children to write themselves...
@@ -86,7 +95,12 @@ def treeit(func):
 		else:
 			_r = TreeNode(func.__name__)
 			r.addNode(_r)
+		t1 = time.clock()
 		ret = func(*args, **kwargs)
+		t2 = time.clock()
+		if not _r.children:
+			_r.time = (t2 - t1) * 1000.0
+			print _r.time
 		# We are root, write out
 		if not r:
 			_r.toFile()
