@@ -3,3 +3,4 @@
 *.trash
 *.swp
 test/*
+.dot/*
